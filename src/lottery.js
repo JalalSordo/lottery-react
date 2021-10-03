@@ -1,17 +1,8 @@
 //This class gives you access to the web3 lottery contract
 import web3 from "./web3.js";
 
-const address = "0x542B87d292934BDD0638098eE71A6951CAAe7949";
+const address = "0xC86B704d02D358692D72Be0cE702B5d02D7082cf";
 const abi = [
-  {
-    constant: true,
-    inputs: [],
-    name: "getAllPLayers",
-    outputs: [{ name: "", type: "address[]" }],
-    payable: false,
-    stateMutability: "view",
-    type: "function",
-  },
   {
     constant: true,
     inputs: [],
@@ -50,8 +41,26 @@ const abi = [
   },
   {
     constant: true,
+    inputs: [],
+    name: "getAllPlayers",
+    outputs: [{ name: "", type: "address[]" }],
+    payable: false,
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    constant: true,
     inputs: [{ name: "", type: "uint256" }],
     name: "players",
+    outputs: [{ name: "", type: "address" }],
+    payable: false,
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    constant: true,
+    inputs: [],
+    name: "lastWinner",
     outputs: [{ name: "", type: "address" }],
     payable: false,
     stateMutability: "view",

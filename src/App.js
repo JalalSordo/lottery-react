@@ -13,7 +13,7 @@ class App extends React.Component {
       participants: [],
       prize: 0,
       amount: 0,
-      winner: null,
+      lastWinner: null,
       contractAddress: "",
       currentPlayer: "",
       message: "",
@@ -26,8 +26,9 @@ class App extends React.Component {
   async componentDidMount() {
     console.log("lottery.addres ", lottery.options.address);
     const manager = await lottery.methods.manager().call();
+    const lastWinner = await lottery.methods.lastWinner().call();
     const prize = await lottery.methods.getCurrentPrize().call();
-    const participants = await lottery.methods.getAllPLayers().call();
+    const participants = await lottery.methods.getAllPlayers().call();
     const currentPlayer = await web3.eth.getAccounts();
     this.setState({
       manager,
@@ -35,6 +36,7 @@ class App extends React.Component {
       participants,
       contractAddress: lottery.options.address,
       currentPlayer: currentPlayer[0],
+      lastWinner,
     });
   }
 
@@ -51,7 +53,7 @@ class App extends React.Component {
       value: web3.utils.toWei(this.state.amount, "ether"),
     });
     const prize = await lottery.methods.getCurrentPrize().call();
-    const participants = await lottery.methods.getAllPLayers().call();
+    const participants = await lottery.methods.getAllPlayers().call();
     this.setState({
       message: "",
       participants,
@@ -59,13 +61,19 @@ class App extends React.Component {
     });
   }
 
-  pickWinner() {
+  async pickWinner() {
     console.log("picking a winner....");
+    this.setState({ message: "Waiting on transaction success...." });
+    await lottery.methods.pickWinner().send({ from: this.state.manager });
+    const prize = await lottery.methods.getCurrentPrize().call();
+    const participants = await lottery.methods.getAllPlayers().call();
+    const lastWinner = await lottery.methods.lastWinner().call();
+    this.setState({ message: "", prize, participants, lastWinner });
   }
 
   render() {
     const isContractManagerConnected =
-      this.state.manager == this.state.currentPlayer;
+      this.state.manager === this.state.currentPlayer;
     return (
       <div className="content">
         <h1>Lottery Contract</h1>
@@ -143,7 +151,12 @@ class App extends React.Component {
         )}
         <br></br>
 
-        {this.state.winner && <h2>{this.state.winner} has won!</h2>}
+        {this.state.lastWinner > 0 && (
+          <h2>
+            {" "}
+            <span className="important">{this.state.lastWinner}</span> has won the last lottery!
+          </h2>
+        )}
       </div>
     );
   }
