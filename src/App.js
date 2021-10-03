@@ -13,8 +13,9 @@ class App extends React.Component {
       participants: [],
       prize: 0,
       amount: 0,
-      winner: "0x000ebc",
+      winner: null,
       contractAddress: "",
+      currentPlayer: "",
       message: "",
     };
     this.handleChange = this.handleChange.bind(this);
@@ -27,11 +28,13 @@ class App extends React.Component {
     const manager = await lottery.methods.manager().call();
     const prize = await lottery.methods.getCurrentPrize().call();
     const participants = await lottery.methods.getAllPLayers().call();
+    const currentPlayer = await web3.eth.getAccounts();
     this.setState({
       manager,
       prize: web3.utils.fromWei(prize, "ether"),
       participants,
       contractAddress: lottery.options.address,
+      currentPlayer: currentPlayer[0],
     });
   }
 
@@ -43,10 +46,8 @@ class App extends React.Component {
   async enterLottery() {
     console.log("entering lottery...");
     this.setState({ message: "Waiting on transaction success...." });
-    const currentPlayer = await web3.eth.getAccounts();
-    console.log(currentPlayer);
     await lottery.methods.enter().send({
-      from: currentPlayer[0],
+      from: this.state.currentPlayer,
       value: web3.utils.toWei(this.state.amount, "ether"),
     });
     const prize = await lottery.methods.getCurrentPrize().call();
@@ -59,10 +60,12 @@ class App extends React.Component {
   }
 
   pickWinner() {
-    console.log("pickign a winner....");
+    console.log("picking a winner....");
   }
 
   render() {
+    const isContractManagerConnected =
+      this.state.manager == this.state.currentPlayer;
     return (
       <div className="content">
         <h1>Lottery Contract</h1>
@@ -122,19 +125,25 @@ class App extends React.Component {
         <br></br>
         <h5>{this.state.message}</h5>
         <hr></hr>
+        {isContractManagerConnected && (
+          <div>
+            <br></br>
+            <h2>Time to pick a winner ?</h2>
+            <br></br>
+            <div className="align-items-center">
+              <input
+                type="button"
+                value="Pick a Winner"
+                className="btn btn-success btn-lg"
+                onClick={this.pickWinner}
+              />
+            </div>
+            <br></br>
+          </div>
+        )}
         <br></br>
-        <h2>Time to pick a winner</h2>
-        <br></br>
-        <div className="align-items-center">
-          <input
-            type="button"
-            value="Pick a Winner"
-            className="btn btn-success btn-lg"
-            onClick={this.pickWinner}
-          />
-        </div>
-        <br></br>
-        <h2>{this.state.winner} has won!</h2>
+
+        {this.state.winner && <h2>{this.state.winner} has won!</h2>}
       </div>
     );
   }
