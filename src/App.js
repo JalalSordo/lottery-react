@@ -2,6 +2,7 @@ import "./App.css";
 import React from "react";
 import web3 from "./web3.js";
 import lottery from "./lottery.js";
+import Loader from "./Loader.js";
 
 const rx_live = /^[+-]?\d*(?:[.,]\d*)?$/;
 
@@ -17,6 +18,7 @@ class App extends React.Component {
       contractAddress: "",
       currentPlayer: "",
       message: "",
+      showLoader: false,
     };
     this.handleChange = this.handleChange.bind(this);
     this.enterLottery = this.enterLottery.bind(this);
@@ -47,7 +49,7 @@ class App extends React.Component {
 
   async enterLottery() {
     console.log("entering lottery...");
-    this.setState({ message: "Waiting on transaction success...." });
+    this.setState({ showLoader: true });
     await lottery.methods.enter().send({
       from: this.state.currentPlayer,
       value: web3.utils.toWei(this.state.amount, "ether"),
@@ -55,7 +57,7 @@ class App extends React.Component {
     const prize = await lottery.methods.getCurrentPrize().call();
     const participants = await lottery.methods.getAllPlayers().call();
     this.setState({
-      message: "",
+      showLoader: false,
       participants,
       prize: web3.utils.fromWei(prize, "ether"),
     });
@@ -63,12 +65,12 @@ class App extends React.Component {
 
   async pickWinner() {
     console.log("picking a winner....");
-    this.setState({ message: "Waiting on transaction success...." });
+    this.setState({ showLoader: true });
     await lottery.methods.pickWinner().send({ from: this.state.manager });
     const prize = await lottery.methods.getCurrentPrize().call();
     const participants = await lottery.methods.getAllPlayers().call();
     const lastWinner = await lottery.methods.lastWinner().call();
-    this.setState({ message: "", prize, participants, lastWinner });
+    this.setState({ showLoader: false, prize, participants, lastWinner });
   }
 
   render() {
@@ -76,6 +78,7 @@ class App extends React.Component {
       this.state.manager === this.state.currentPlayer;
     return (
       <div className="content">
+        <Loader showLoader={this.state.showLoader} />
         <h1>Lottery Contract</h1>
         <h4>
           <p>
@@ -154,7 +157,8 @@ class App extends React.Component {
         {this.state.lastWinner > 0 && (
           <h2>
             {" "}
-            <span className="important">{this.state.lastWinner}</span> has won the last lottery!
+            <span className="important">{this.state.lastWinner}</span> has won
+            the last lottery!
           </h2>
         )}
       </div>
